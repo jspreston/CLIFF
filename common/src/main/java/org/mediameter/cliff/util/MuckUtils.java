@@ -1,15 +1,18 @@
 package org.mediameter.cliff.util;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.bericotech.clavin.extractor.LocationOccurrence;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.mediameter.cliff.extractor.ExtractedEntities;
 import org.mediameter.cliff.extractor.OrganizationOccurrence;
 import org.mediameter.cliff.extractor.PersonOccurrence;
 import org.mediameter.cliff.extractor.SentenceLocationOccurrence;
 
-import com.google.gson.Gson;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class MuckUtils {
@@ -72,5 +75,24 @@ public class MuckUtils {
         }
         return entities;
     }
-    
+
+    public static ExtractedEntities entitiesFromLocationJsonString(String locationsJsonString) {
+        Gson gson = new Gson();
+        JsonObject content = gson.fromJson(locationsJsonString, JsonObject.class);
+
+        ExtractedEntities entities = new ExtractedEntities();
+        JsonArray mentions = content.getAsJsonArray("entitymentions");
+        for(JsonElement e : mentions) {
+            JsonObject mention = e.getAsJsonObject();
+            String mentionType = mention.get("ner").getAsString();
+            if (mentionType.toLowerCase().equals("location")) {
+                String mentionText = mention.get("text").getAsString();
+                int characterOffset = mention.get("characterOffsetBegin").getAsInt();
+                LocationOccurrence location = new LocationOccurrence(mentionText, characterOffset);
+                entities.addLocation(location);
+            }
+        }
+        return entities;
+
+    }
 }

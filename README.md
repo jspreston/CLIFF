@@ -1,23 +1,51 @@
 CLIFF: Extract Named Entities and Geoparse the News
 ===================================================
 
-CLIFF is a lightweight server to allow HTTP requests to the Stanford Named Entity 
-Recognizer and a modified [CLAVIN 2.1.0 geoparser](http://clavin.bericotechnologies.com).  
-It allows you to submit unstructured text over HTTP and a receive in reply JSON 
-results with information about organizations mentioned, locations mentioned, 
-people mentioned, and countries the text is "about".  The geoparsing is tuned 
+# Note: CLIFF modifications
+This version of CLIFF adds a new API endpoint accepting a JSON
+structure containing location mentions and corresponding text offsets
+pre-parsed from raw text, and returns a location result in the format
+of the full-text parse endpoint.
+
+## endpoint:
+```
+/parse/locations
+```
+## expected format of 'q' parameter:
+```
+{
+    "entitymentions": [
+        {
+            "ner": "LOCATION",
+            "text": "Tokyo",
+            "characterOffsetBegin": 102
+        },
+        {
+            "ner": "LOCATION",
+            "text": "San Francisco",
+            "characterOffsetBegin": 1322
+        }
+    ]
+}
+```
+
+CLIFF is a lightweight server to allow HTTP requests to the Stanford Named Entity
+Recognizer and a modified [CLAVIN 2.1.0 geoparser](http://clavin.bericotechnologies.com).
+It allows you to submit unstructured text over HTTP and a receive in reply JSON
+results with information about organizations mentioned, locations mentioned,
+people mentioned, and countries the text is "about".  The geoparsing is tuned
 to identify cities, states and countries.
 
 # Installing
 
 You can try CLIFF out on our public website: http://cliff.mediameter.org.
-We don't host a public installation of CLIFF for you to use.  If you want to install and 
-use CLIFF, @ahalterman created [an awesome vagrant script](https://github.com/c4fcm/CLIFF-up) 
-that will install it to a virtual host you can use.  Or check out @johnb30's 
-[docker config](https://github.com/johnb30/cliff-docker).  Use one of those to get this 
+We don't host a public installation of CLIFF for you to use.  If you want to install and
+use CLIFF, @ahalterman created [an awesome vagrant script](https://github.com/c4fcm/CLIFF-up)
+that will install it to a virtual host you can use.  Or check out @johnb30's
+[docker config](https://github.com/johnb30/cliff-docker).  Use one of those to get this
 installed quickly and easily.
 
-If you want to access CLIFF's results from Python, use our 
+If you want to access CLIFF's results from Python, use our
 [Python Client API Library](https://github.com/c4fcm/CLIFF-API-Client):
 ```
 pip install mediameter-cliff
@@ -42,7 +70,7 @@ The reason CLIFF exists! This parses some text and returns the entities mentione
 |Parameter|Default|Notes|
 |----------|----------|----------|
 |q|(required)|Raw text of a news story that you want to parse|
-|replaceAllDemonyms|false|"true" if you want to count things like "Chinese" as a mention of the country China| 
+|replaceAllDemonyms|false|"true" if you want to count things like "Chinese" as a mention of the country China|
 
 Example Query:
 `http://localhost:8080/CLIFF-2.1.1/parse/text?q=Some%20clever%20text%20mentioning%20places%20like%20New%20Delhi,%20and%20people%20like%20Einstein.%20Perhaps%20also%20we%20want%20mention%20an%20organization%20like%20the%20United%20Nations?`
@@ -240,7 +268,7 @@ Response:
 
 ## Options
 
-You can configure how CLIFF runs by editing the following properties in the `src/main/resources/cliff.properties` 
+You can configure how CLIFF runs by editing the following properties in the `src/main/resources/cliff.properties`
 file.
 
 ### ner.modelToUse
@@ -267,17 +295,17 @@ brew cask install Java
 
 ## Install CLAVIN
 
-You need to download and install the latest version of CLAVIN in order to build the Geonames Gazetteer Index 
-for geoparsing. The idea is that you build all that, and then create a symlink at 
+You need to download and install the latest version of CLAVIN in order to build the Geonames Gazetteer Index
+for geoparsing. The idea is that you build all that, and then create a symlink at
 `/etc/cliff2/IndexDirectory` to the CLAVIN index you just built.
 
-To build, run `mvn` in the top level directory.  You can do `mvn package -DskipTests` and then you will get a 
+To build, run `mvn` in the top level directory.  You can do `mvn package -DskipTests` and then you will get a
 .war file in `webapp/target/`.
 
 ## Tomcat Setup
 
-CLIFF is setup to be run inside a Java servlet container (ie. Tomcat 8).  For development 
-we use the [Maven Tomcat plugin](http://tomcat.apache.org/maven-plugin.html).  To deploy, 
+CLIFF is setup to be run inside a Java servlet container (ie. Tomcat 8).  For development
+we use the [Maven Tomcat plugin](http://tomcat.apache.org/maven-plugin.html).  To deploy,
 add this to your `%TOMCAT_PATH%/conf/tomcat-users.xml` file:
 ```xml
   <role rolename="manager"/>
@@ -299,8 +327,8 @@ That lets the Maven Tomcat plugin upload the WAR it builds over the website cont
 
 ## Building and Deploying to Tomcat
 
-First make sure tomcat is running (ie. `catalina run`). Now run `mvn tomcat7:deploy -DskipTests` 
-to deploy the app, or `mvn tomcat7:redeploy -DskipTests` to redeploy once you've already got 
+First make sure tomcat is running (ie. `catalina run`). Now run `mvn tomcat7:deploy -DskipTests`
+to deploy the app, or `mvn tomcat7:redeploy -DskipTests` to redeploy once you've already got
 the app deployed.
 
 ## Pluggable Entity Extraction
@@ -344,7 +372,7 @@ To build a release:
 3. to create the WAR file, run `mvn package -DskipTests`.
 4. update the examples in `README.md`
 5. tag the release with the version number `vX.Y.Z`
-6. author a new release for that tag on GitHub, write a description of the changes, and upload the .war 
+6. author a new release for that tag on GitHub, write a description of the changes, and upload the .war
 
 ## Deploying on Ubuntu
 

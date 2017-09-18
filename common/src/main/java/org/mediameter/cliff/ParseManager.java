@@ -1,11 +1,11 @@
 package org.mediameter.cliff;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.bericotech.clavin.gazetteer.CountryCode;
+import com.bericotech.clavin.gazetteer.GeoName;
+import com.bericotech.clavin.gazetteer.query.Gazetteer;
+import com.bericotech.clavin.gazetteer.query.LuceneGazetteer;
+import com.bericotech.clavin.resolver.ResolvedLocation;
+import com.google.gson.Gson;
 import org.mediameter.cliff.extractor.EntityExtractorService;
 import org.mediameter.cliff.extractor.ExtractedEntities;
 import org.mediameter.cliff.extractor.SentenceLocationOccurrence;
@@ -22,12 +22,11 @@ import org.mediameter.cliff.util.MuckUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bericotech.clavin.gazetteer.CountryCode;
-import com.bericotech.clavin.gazetteer.GeoName;
-import com.bericotech.clavin.gazetteer.query.Gazetteer;
-import com.bericotech.clavin.gazetteer.query.LuceneGazetteer;
-import com.bericotech.clavin.resolver.ResolvedLocation;
-import com.google.gson.Gson;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Singleton-style wrapper around a GeoParser.  Call GeoParser.locate(someText) to use this class.
@@ -160,7 +159,27 @@ public class ParseManager {
         results.put("milliseconds", elapsedMillis);
         return results;
     }
-    
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static HashMap parseFromLocationsJson(String locationsJsonString){
+        long startTime = System.currentTimeMillis();
+        HashMap results = null;
+        if(locationsJsonString.trim().length()==0){
+            return getErrorText("No text");
+        }
+        try {
+            ExtractedEntities entities = MuckUtils.entitiesFromLocationJsonString(locationsJsonString);
+            entities = getParserInstance().resolve(entities);;
+            results = parseFromEntities(entities);
+        } catch (Exception e) {
+            results = getErrorText(e.toString());
+        }
+        long endTime = System.currentTimeMillis();
+        long elapsedMillis = endTime - startTime;
+        results.put("milliseconds", elapsedMillis);
+        return results;
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })  // I'm generating JSON... don't whine!
     public static HashMap parseFromEntities(ExtractedEntities entities){
         if (entities == null){
